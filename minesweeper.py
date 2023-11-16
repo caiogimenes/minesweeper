@@ -107,7 +107,6 @@ class Sentence():
         """
         if len(self.cells) == self.count:
             return self.cells
-        return
 
     def known_safes(self):
         """
@@ -124,9 +123,9 @@ class Sentence():
         if cell not in self.cells:
             return
         else:
-            self.cells -= cell
-            self.count -= 1
-            
+            self.cells = self.cells - cell
+            self.count = self.count - 1
+        
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
@@ -135,7 +134,8 @@ class Sentence():
         if cell not in self.cells:
             return
         else:
-            self.cells -= cell
+            self.cells = self.cells - cell
+
 
 class MinesweeperAI():
     """
