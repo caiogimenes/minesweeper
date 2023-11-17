@@ -105,43 +105,35 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        if len(self.cells) == self.count:
-            return self.cells
+        return self.cells if self.count == len(self.cells) else None
 
     def known_safes(self):
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        if self.count == 0:
-            return self.cells
+        return self.cells if self.count == 0 else None
 
     def mark_mine(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        if cell not in self.cells:
-            return
-        else:
-            self.cells = self.cells - cell
-            self.count = self.count - 1
+        self.cells.discard(cell)
+        self.count -= 1
+        return
         
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        if cell not in self.cells:
-            return
-        else:
-            self.cells = self.cells - cell
-
+        self.cells.discard(cell)
+        return
 
 class MinesweeperAI():
     """
     Minesweeper game player
     """
-
     def __init__(self, height=8, width=8):
 
         # Set initial height and width
@@ -191,14 +183,33 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        if cell in self.moves_made:
+        if cell not in self.moves_made:
+            # mark cell as a move that has been made
+            self.moves_made.add(cell)
+            
+            # first part of setence: the cells arround the cell
+            neighbors_cells = []
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    neighbors_cells.append((cell[0]+i, cell[0]+j))
+            # remove the cell
+            neighbors_cells.remove(cell)
+
+            # create sentence object
+            sentence = Sentence()
+            sentence.cells = neighbors_cells
+            sentence.count = count
+            
+            # add sentence to knowledge
+            self.knowledge.append(sentence)
+            
+            # get safe cells and mines, if exists
+            safes = sentence.known_safes
+            mines = sentence.known_mines
+            
+            
+        else:
             return
-        
-        self.moves_made(cell)
-        self.mark_safe(cell)
-        
-        sentence = Sentence()
-           
         
                 
     def make_safe_move(self):
