@@ -215,24 +215,23 @@ class MinesweeperAI():
                     self.mark_mine(mine)
 
             # try new inference checking if subsets
-            for i in range(len(self.knowledge)):
-                sentence_a = self.knowledge[i]
-                for sentence in self.knowledge:
-                    if sentence_a == sentence:
-                        continue
-                    else:
-                        if sentence.cells.issubset(sentence_a.cells):
-                            new_sentence = Sentence(sentence_a.cells - sentence.cells, sentence_a.count - sentence.count)                            
-                            self.knowledge.append(new_sentence)
-                            new_safes = new_sentence.known_safes()
-                            new_mines = new_sentence.known_mines()
-                            # update knowledge
-                            if new_safes:
-                                for safe in new_safes.copy() or []:
-                                    self.mark_safe(safe)
-                            if new_mines:
-                                for mine in new_mines.copy() or []:
-                                    self.mark_mine(mine)
+            for st1 in self.knowledge.copy():
+                set1 = st1.cells
+                for st2 in self.knowledge:
+                    set2 = st2.cells
+                    if set1 != set2 and set1.issubset(set2):
+                        new_sentence = Sentence(set2 - set1, st2.count - st1.count)
+                        self.add_knowledge(new_sentence)
+                        # get safe cells and mines, if exists
+                        safes = sentence.known_safes()
+                        mines = sentence.known_mines()
+                        # update knowledge
+                        if safes:
+                            for safe in safes.copy() or []:
+                                self.mark_safe(safe)
+                        if mines:
+                            for mine in mines.copy() or []:
+                                self.mark_mine(mine)        
             return
         # if invalid move
         else:
