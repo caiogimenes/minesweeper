@@ -191,7 +191,10 @@ class MinesweeperAI():
             neighbors_cells = []
             for i in range(-1, 2):
                 for j in range(-1, 2):
-                    neighbors_cells.append((cell[0]+i, cell[1]+j))
+                    a = cell[0]+i
+                    b = cell[1]+j
+                    if 0 <= a < self.height and 0 <= b < self.width:
+                        neighbors_cells.append((cell[0]+i, cell[1]+j))
             # remove the cell
             neighbors_cells.remove(cell)
 
@@ -202,17 +205,9 @@ class MinesweeperAI():
             self.knowledge.append(sentence)
             self.mark_safe(cell)
             
-            # get safe cells and mines, if exists
-            safes = sentence.known_safes()
-            mines = sentence.known_mines()
-            
-            # update knowledge
-            if safes:
-                for safe in safes.copy() or []:
-                    self.mark_safe(safe)
-            if mines:
-                for mine in mines.copy() or []:
-                    self.mark_mine(mine)
+            for item in self.knowledge:
+                print(item.cells ,"\t", item.count)
+            print("----------------------")
 
             # try new inference checking if subsets
             for st1 in self.knowledge.copy():
@@ -220,19 +215,29 @@ class MinesweeperAI():
                 for st2 in self.knowledge.copy():
                     set2 = st2.cells
                     if set1 != set2 and set1.issubset(set2):
-                        print(set2)
-                        # new_sentence = Sentence(set2 - set1, st2.count - st1.count)
-                        # self.knowledge.append(new_sentence)
-                        # # get safe cells and mines, if exists
-                        # safes = sentence.known_safes()
-                        # mines = sentence.known_mines()
-                        # # update knowledge
-                        # if safes:
-                        #     for safe in safes.copy() or []:
-                        #         self.mark_safe(safe)
-                        # if mines:
-                        #     for mine in mines.copy() or []:
-                        #         self.mark_mine(mine)        
+                        new_sentence = Sentence(set2 - set1, st2.count - st1.count)
+                        if new_sentence not in self.knowledge:
+                            self.knowledge.append(new_sentence)
+            
+            for sentence in self.knowledge.copy(): 
+                # get safe cells and mines, if exists
+                safes = sentence.known_safes()
+                mines = sentence.known_mines()
+                # update knowledge
+                if safes:
+                    for safe in safes.copy() or []:
+                        self.mark_safe(safe)
+                if mines:
+                    for mine in mines.copy() or []:
+                        self.mark_mine(mine)
+                        
+            for item in self.knowledge.copy():
+                if item.cells == set():
+                    self.knowledge.remove(item)
+            
+            for item in self.knowledge:
+                print(item.cells ,"\t", item.count)
+            print("----------------------")
             return
         # if invalid move
         else:
