@@ -183,68 +183,59 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        if cell not in self.moves_made:
-            # mark cell as a move that has been made
-            self.moves_made.add(cell)
-            
-            # first part of setence: the cells arround the cell
-            neighbors_cells = []
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    a = cell[0]+i
-                    b = cell[1]+j
-                    if 0 <= a < self.height and 0 <= b < self.width:
-                        neighbors_cells.append((cell[0]+i, cell[1]+j))
-            # remove the cell
-            neighbors_cells.remove(cell)
-
-            # create sentence object
-            sentence = Sentence(neighbors_cells, count)
-            
-            # add sentence to knowledge
-            self.knowledge.append(sentence)
-            self.mark_safe(cell)
-            
-            for item in self.knowledge:
-                print(item.cells ,"\t", item.count)
-            print("----------------------")
-
-            # try new inference checking if subsets
-            for st1 in self.knowledge.copy():
-                set1 = st1.cells
-                for st2 in self.knowledge.copy():
-                    set2 = st2.cells
-                    if set1 != set2 and set1.issubset(set2):
-                        new_sentence = Sentence(set2 - set1, st2.count - st1.count)
-                        if new_sentence not in self.knowledge:
-                            self.knowledge.append(new_sentence)
-            
-            for sentence in self.knowledge.copy(): 
-                # get safe cells and mines, if exists
+        # mark cell as a move that has been made
+        self.moves_made.add(cell)
+                
+        # first part of setence: the cells arround the cell
+        neighbors_cells = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                a = cell[0]+i
+                b = cell[1]+j
+                if 0 <= a < self.height and 0 <= b < self.width:
+                    neighbors_cells.append((cell[0]+i, cell[1]+j))
+        # remove the cell and create sentence object        
+        sentence = Sentence(neighbors_cells, count)
+        # add sentence to knowledge
+        print("Appending sentence...")
+        self.knowledge.append(sentence)
+        self.mark_safe(cell) 
+        # mark cells
+        print("Updating sentence...")
+        self.update_knowledge(self.knowledge)
+        # inference
+        print("Infering sentences...")
+        self.inference(self.knowledge.copy())
+        print("Updating sentence...")
+        self.update_knowledge(self.knowledge)
+    
+    def update_knowledge(self, knowledge):
+        if knowledge:
+            for sentence in knowledge:
                 safes = sentence.known_safes()
                 mines = sentence.known_mines()
-                # update knowledge
                 if safes:
-                    for safe in safes.copy() or []:
+                    for safe in safes.copy():
                         self.mark_safe(safe)
-                if mines:
-                    for mine in mines.copy() or []:
-                        self.mark_mine(mine)
-                        
-            for item in self.knowledge.copy():
-                if item.cells == set():
-                    self.knowledge.remove(item)
-            
-            for item in self.knowledge:
-                print(item.cells ,"\t", item.count)
-            print("----------------------")
-            return
-        # if invalid move
-        else:
-            print("move already made")
-            return
-        
-                
+                if mines:    
+                    for mine in mines.copy():
+                        self.mark_mine(mine)   
+        return
+    
+    def inference(self, knowledge):
+        inferences = []
+        for st1 in knowledge:
+            set1 = st1.cells
+            for st2 in knowledge:
+                set2 = st2.cells
+                if set1 != set2 and set1.issubset(set2):
+                    new_sentence = Sentence(set2 - set1, st2.count - st1.count)
+                    inferences.append(new_sentence)
+
+        self.knowledge.extend(inferences)
+        return True if inferences else None
+
+
     def make_safe_move(self):
         """
         Returns a safe cell to choose on the Minesweeper board.
