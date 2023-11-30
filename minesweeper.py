@@ -208,7 +208,7 @@ class MinesweeperAI():
         self.inference(self.knowledge.copy())
         print("Updating sentence...")
         self.update_knowledge(self.knowledge)
-    
+
     def update_knowledge(self, knowledge):
         if knowledge:
             for sentence in knowledge:
@@ -229,12 +229,13 @@ class MinesweeperAI():
             for st2 in knowledge:
                 set2 = st2.cells
                 if set1 != set2 and set1.issubset(set2):
+                    print("SET 1: ", set1)
+                    print("SET 2: ", set2)
                     new_sentence = Sentence(set2 - set1, st2.count - st1.count)
                     inferences.append(new_sentence)
 
         self.knowledge.extend(inferences)
         return True if inferences else None
-
 
     def make_safe_move(self):
         """
@@ -249,7 +250,6 @@ class MinesweeperAI():
             if move not in self.moves_made:
                 return move
         return None
-
 
     def make_random_move(self):
         """
