@@ -197,45 +197,13 @@ class MinesweeperAI():
         # remove the cell and create sentence object        
         sentence = Sentence(neighbors_cells, count)
         # add sentence to knowledge
-        print("Appending sentence...")
         self.knowledge.append(sentence)
-        self.mark_safe(cell) 
-        # mark cells
-        print("Updating sentence...")
-        self.update_knowledge(self.knowledge)
-        # inference
-        print("Infering sentences...")
-        self.inference(self.knowledge.copy())
-        print("Updating sentence...")
-        self.update_knowledge(self.knowledge)
-
-    def update_knowledge(self, knowledge):
-        if knowledge:
-            for sentence in knowledge:
-                safes = sentence.known_safes()
-                mines = sentence.known_mines()
-                if safes:
-                    for safe in safes.copy():
-                        self.mark_safe(safe)
-                if mines:    
-                    for mine in mines.copy():
-                        self.mark_mine(mine)   
-        return
-    
-    def inference(self, knowledge):
-        inferences = []
-        for st1 in knowledge:
-            set1 = st1.cells
-            for st2 in knowledge:
-                set2 = st2.cells
-                if set1 != set2 and set1.issubset(set2):
-                    print("SET 1: ", set1)
-                    print("SET 2: ", set2)
-                    new_sentence = Sentence(set2 - set1, st2.count - st1.count)
-                    inferences.append(new_sentence)
-
-        self.knowledge.extend(inferences)
-        return True if inferences else None
+        for snt in self.knowledge:
+            safes = snt.known_safes()
+            mines = snt.known_mines()
+            for safe in safes:
+                
+        
 
     def make_safe_move(self):
         """
