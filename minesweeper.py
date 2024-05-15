@@ -217,20 +217,36 @@ class MinesweeperAI():
         
         # Check if sentence can infere something
         mines = sentence.known_mines()
-        safes = sentence.known_safes
+        safes = sentence.known_safes()
         if mines:
             for mine in mines:
                 self.mines.add(mine)
-                sentence.mark_mine(mine)
         if safes:
             for safe in safes:
                 self.safes.add(safe)
-                sentence.mark_safe(safe)
         
-        # Check if two sentences are subset and infere       
+        for safe in safes:
+            self.mark_safe(safe)
+        for mine in mines:
+            self.mark_mine(mine)
+            
+        # Check if two sentences are subset and infere
+        for i in range(len(self.knowledge)-1):
+            el = self.knowledge[i]
+            next_el = self.knowledge[i+i]
+            
+            if el.cells.issubset(next_el.cells):
+                new_cells = el.cells - next_el.cells
+                new_count = el.count - next_el.count
+                self.knowledge.append(Sentence(new_cells, new_count))
+                
+            elif next_el.cells.issubset(el.cells):
+                new_cells = next_el.cells - el.cells
+                new_count = next_el.count - el.count
+                self.knowledge.append(Sentence(new_cells, new_count))
         
-        raise NotImplementedError
-
+        return None
+    
     def make_safe_move(self):
         """
         Returns a safe cell to choose on the Minesweeper board.
@@ -240,8 +256,14 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
-
+        if self.safes:
+            while True:
+                cell = self.safes.pop()
+                if cell not in self.moves_made:
+                    return cell
+        
+        return None
+    
     def make_random_move(self):
         """
         Returns a move to make on the Minesweeper board.
@@ -249,4 +271,11 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        mines_and_mades = self.mines.union(self.moves_made)
+        while True:
+            i = random.randint(0, self.height - 1)
+            j = random.randint(0, self.width - 1)
+            cell = set((i, j))
+            
+            if cell not in mines_and_mades:
+                return cell
