@@ -190,6 +190,44 @@ class MinesweeperAI():
                if they can be inferred from existing knowledge
         """
         self.moves_made.add(cell)
+        self.safes.add(cell)          
+        
+        def get_neighbors():
+            """
+            Get the neighbors cells from the given cell
+            """
+            # Define cells
+            nearby_cells = set()
+            # Loop over all cells within one row and column
+            for i in range(cell[0] - 1, cell[0] + 2):
+                for j in range(cell[1] - 1, cell[1] + 2):
+                    # Ignore the cell itself
+                    if (i, j) == cell:
+                        continue
+                    
+                    # Update nearby cells set if cell in bounds and is mine
+                    if 0 <= i < self.height and 0 <= j < self.width:
+                        nearby_cells.add((i,j))
+            return nearby_cells
+        
+        # Create a sentence
+        sentence = Sentence(get_neighbors(), count)
+        # Append sentence to knowledge
+        self.knowledge.append(sentence)
+        
+        # Check if sentence can infere something
+        mines = sentence.known_mines()
+        safes = sentence.known_safes
+        if mines:
+            for mine in mines:
+                self.mines.add(mine)
+                sentence.mark_mine(mine)
+        if safes:
+            for safe in safes:
+                self.safes.add(safe)
+                sentence.mark_safe(safe)
+        
+        # Check if two sentences are subset and infere       
         
         raise NotImplementedError
 
