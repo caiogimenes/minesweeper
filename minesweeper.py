@@ -1,5 +1,6 @@
 import itertools
 import random
+from copy import deepcopy
 
 
 class Minesweeper():
@@ -210,41 +211,39 @@ class MinesweeperAI():
                         nearby_cells.add((i,j))
             return nearby_cells
         
+        # Check if sentence can infere something
+        def infer_from_sentence(sentence):
+            self.knowledge.append(sentence)
+            if sentence.known_mines():
+                print('KNOWN MINES')
+                mines = deepcopy(sentence.known_mines())
+                for mine in mines:
+                    self.mark_mine(mine)
+            if sentence.known_safes():
+                safes = deepcopy(sentence.known_safes())
+                for safe in safes:
+                    self.mark_safe(safe)   
+            return None
+        
         # Create a sentence
         sentence = Sentence(get_neighbors(), count)
         # Append sentence to knowledge
-        self.knowledge.append(sentence)
-        
-        # Check if sentence can infere something
-        mines = sentence.known_mines()
-        safes = sentence.known_safes()
-        if mines:
-            for mine in mines:
-                self.mines.add(mine)
-        if safes:
-            for safe in safes:
-                self.safes.add(safe)
-        
-        for safe in safes:
-            self.mark_safe(safe)
-        for mine in mines:
-            self.mark_mine(mine)
-            
+        infer_from_sentence(sentence)       
         # Check if two sentences are subset and infere
+        inferences = []
         for i in range(len(self.knowledge)-1):
-            el = self.knowledge[i]
-            next_el = self.knowledge[i+i]
-            
-            if el.cells.issubset(next_el.cells):
-                new_cells = el.cells - next_el.cells
-                new_count = el.count - next_el.count
-                self.knowledge.append(Sentence(new_cells, new_count))
-                
-            elif next_el.cells.issubset(el.cells):
-                new_cells = next_el.cells - el.cells
-                new_count = next_el.count - el.count
-                self.knowledge.append(Sentence(new_cells, new_count))
+            el = self.knowledge[-1]
+            next_el = self.knowledge[i]
+
+            if el.cells.issubset(next_el.cells) or el.cells.issuperset(new_cells):
+                new_cells = el.difference(next_el)
+                new_count = int(next_el.count - el.count)
+                new_sentence = Sentence(new_cells, new_count)
+                inferences.append(new_sentence)
         
+        for inference in inferences: 
+                infer_from_sentence(inference)
+
         return None
     
     def make_safe_move(self):
@@ -256,12 +255,12 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        if self.safes:
-            while True:
-                cell = self.safes.pop()
-                if cell not in self.moves_made:
-                    return cell
-        
+        copy_safes = self.safes.copy()
+        while copy_safes:
+            cell = copy_safes.pop()
+            if cell not in self.moves_made:
+                return cell
+
         return None
     
     def make_random_move(self):
@@ -275,7 +274,8 @@ class MinesweeperAI():
         while True:
             i = random.randint(0, self.height - 1)
             j = random.randint(0, self.width - 1)
-            cell = set((i, j))
+            cell = (i, j)
             
             if cell not in mines_and_mades:
+                print(cell)
                 return cell
