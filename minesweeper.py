@@ -121,19 +121,17 @@ class Sentence():
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        if len(self.cells) > 1:
-            if cell in self.cells:
-                self.cells.remove(cell)
-                self.count -= 1
+        if cell in self.cells:
+            self.cells.remove(cell)
+            self.count -= 1
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        if len(self.cells) > 1:
-            if cell in self.cells:
-                self.cells.remove(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
 
 
 class MinesweeperAI():
@@ -172,8 +170,11 @@ class MinesweeperAI():
         to mark that cell as safe as well.
         """
         self.safes.add(cell)
+        
         for sentence in self.knowledge:
+            print('Before ', sentence)
             sentence.mark_safe(cell)
+            print('After ', sentence)
 
     def add_knowledge(self, cell, count):
         """
@@ -212,38 +213,44 @@ class MinesweeperAI():
             return nearby_cells
         
         # Check if sentence can infere something
-        def infer_from_sentence(sentence):
-            self.knowledge.append(sentence)
+        def infer_from_sentence(sentence):            
+            if sentence.known_safes():
+                print('Safes:', sentence.known_safes())
+                safes = deepcopy(sentence.known_safes())
+                print('Safes copy', safes)
+                for safe in safes:
+                    self.mark_safe(safe)   
+
             if sentence.known_mines():
-                print('KNOWN MINES')
                 mines = deepcopy(sentence.known_mines())
                 for mine in mines:
                     self.mark_mine(mine)
-            if sentence.known_safes():
-                safes = deepcopy(sentence.known_safes())
-                for safe in safes:
-                    self.mark_safe(safe)   
+            
+            if sentence:
+                self.knowledge.append(sentence)
+            
             return None
         
         # Create a sentence
         sentence = Sentence(get_neighbors(), count)
         # Append sentence to knowledge
         infer_from_sentence(sentence)       
+        
         # Check if two sentences are subset and infere
         inferences = []
         for i in range(len(self.knowledge)-1):
             el = self.knowledge[-1]
             next_el = self.knowledge[i]
 
-            if el.cells.issubset(next_el.cells) or el.cells.issuperset(new_cells):
-                new_cells = el.difference(next_el)
-                new_count = int(next_el.count - el.count)
+            if el.cells.issubset(next_el.cells) or el.cells.issuperset(next_el.cells):
+                new_cells = el.cells.difference(next_el.cells)
+                new_count = abs(next_el.count - el.count)
+                new_cells = new_cells.difference(self.safes)
                 new_sentence = Sentence(new_cells, new_count)
                 inferences.append(new_sentence)
         
         for inference in inferences: 
                 infer_from_sentence(inference)
-
         return None
     
     def make_safe_move(self):
@@ -277,5 +284,4 @@ class MinesweeperAI():
             cell = (i, j)
             
             if cell not in mines_and_mades:
-                print(cell)
                 return cell
