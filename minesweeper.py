@@ -210,50 +210,26 @@ class MinesweeperAI():
                         nearby_cells.add((i,j))
             return nearby_cells
         
-        # Check if sentence can infere something
-        def infer_from_sentence(sentence):            
-            if sentence.known_safes():
-                safes = sentence.known_safes().copy().union(self.safes)
-                for safe in safes:
-                    self.mark_safe(safe)   
-
-            if sentence.known_mines():
-                print('Known mines: ', sentence.cells, '= ', sentence.count)
-                mines = sentence.known_mines().copy()
-                for mine in mines:
-                    self.mark_mine(mine)
-            
-            # If all safe, delete from knowledge
-            if not sentence.cells:
-                self.knowledge.remove(sentence)
-            
-            return None
-        
+        def new_set(a, b):
+            if a.issubset(b):
+                new = b.difference(a)
+            if a.issuperset(b):
+                new = a.difference(b)
+                
+            return new if new else None
+           
         # Create a sentence
         sentence = Sentence(get_neighbors(), count)
-        # Append sentence to knowledge
         self.knowledge.append(sentence)
         
-        inferences = []
-        for i in range(len(self.knowledge) - 1):
-            last_el = self.knowledge[-1]
-            any_el = self.knowledge[i]
-            if last_el.cells.issuperset(any_el.cells) or last_el.cells.issubset(any_el.cells):
-                new_set = last_el.cells.difference(any_el.cells)
-                new_count = abs(last_el.count - any_el.count)
-                if new_set:
-                    new_sentence = Sentence(new_set, new_count)
-                    inferences.append(new_sentence)        
         
-        self.knowledge.extend(inferences)
-        for sentence in self.knowledge:
-            infer_from_sentence(sentence)      
-
-        for know in self.knowledge:
-            print('Cells: ', know.cells, '= ', know.count)
-        
-        print('Mines: ', self.mines)
-        
+        for i in range(len(self.knowledge)):
+            a = self.knowledge[i]
+            b = self.knowledge[i+1]
+            new = new_set(a.cells, b.cells)
+            if new:
+                new_snt = Sentence(new.cells, a.count - b.count)
+                    
         return None
     
     def make_safe_move(self):
